@@ -1,8 +1,9 @@
 require 'java'
 
-import javax.sound.midi.MidiSystem
-import javax.swing.JFrame
-import java.awt.event.KeyListener
+java_import javax.sound.midi.MidiSystem
+java_import javax.swing.JFrame
+java_import java.awt.event.KeyListener
+java_import java.awt.event.WindowEvent
 
 # Prepare the synth, get channel 0
 synth = MidiSystem.synthesizer
@@ -10,7 +11,7 @@ synth.open
 channel = synth.channels[0]
 
 # Prepare a frame to receive keystrokes
-frame = JFrame.new("Music Frame")
+frame = JFrame.new('Music Frame')
 frame.set_size 300, 300
 frame.default_close_operation = JFrame::EXIT_ON_CLOSE
 frame.add_window_listener do |event|
