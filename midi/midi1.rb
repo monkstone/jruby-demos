@@ -1,10 +1,8 @@
 require 'java'
 
-midi = javax.sound.midi
-import midi.MidiSystem
-import midi.Sequence
-import midi.MidiEvent
-import midi.ShortMessage
+%w[MidiSystem Sequence MidiEvent ShortMessage].each do |klass|
+  java_import "javax.sound.midi.#{klass}"
+end
 
 while (line = gets) !~ /exit/
   # Construct a new sequence using 2 beats per quarter note
