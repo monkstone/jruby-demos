@@ -8,7 +8,7 @@ frame = javax.swing.JFrame.new 'Music Frame'
 frame.set_size 600, 100
 frame.layout = java.awt.FlowLayout.new
 notes = %w[g g# a b- b c c# d e- e f]
-keys = (68..77).map { |key| key }
+keys = (68..77).to_a
 notes_hash = keys.zip(notes).to_h
 notes_hash.each do |value, char|
   button = javax.swing.JButton.new char
