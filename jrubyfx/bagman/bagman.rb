@@ -42,8 +42,8 @@ class BagGame < JRubyFX::Application
   WIDTH, HEIGHT = 512, 512
   attr_reader :bags
   def start(stage)
-    input, @bags = {}, []
-    setup_bags
+    input = {}
+    @bags = create_bags
     briefcase = sprite('briefcase.png', position: Vector[200, 0])
     graphic = nil
     with(stage, title: 'Collect the Money Bags!') do
@@ -63,12 +63,9 @@ class BagGame < JRubyFX::Application
     ActionTimer.new(self, briefcase, bags, graphic, input).start
   end
 
-  def setup_bags
-    15.times do
-      bags << sprite(
-        'moneybag.png',
-        position: Vector[rand(50..400), rand(50..400)]
-      )
+  def create_bags
+    (0..15).map do
+      sprite('moneybag.png', position: Vector[rand(50..400), rand(50..400)])
     end
   end
 end
