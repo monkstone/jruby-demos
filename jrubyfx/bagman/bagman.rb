@@ -5,50 +5,53 @@ require 'jrubyfx'
 require 'matrix'
 
 DELTA, STILL = 300.0, Vector[0.0, 0.0]
-MOVES = {LEFT: Vector[-DELTA,0], RIGHT: Vector[DELTA, 0],
-         UP: Vector[0,-DELTA], DOWN: Vector[0,DELTA]}
+MOVES = { LEFT: Vector[-DELTA, 0], RIGHT: Vector[DELTA, 0],
+         UP: Vector[0, -DELTA], DOWN: Vector[0, DELTA] }
 MOVES.default = STILL
 
 class Sprite
-  include JRubyFX::DSL, JRubyFX::DSLControl
+  include JRubyFX::DSL
+  include JRubyFX::DSLControl
   attr_accessor :position, :velocity
+  attr_reader :sprite_image
 
   def initialize(filename)
-    @image, @position, @velocity = image(filename), Vector[0, 0], STILL
+    @sprite_image, @position, @velocity = image(filename), Vector[0, 0], STILL
   end
 
   def update(time)
-    @position += (@velocity * time)
+    @position += (velocity * time)
   end
 
-  def render(gc)
-    gc.draw_image @image, *position
+  def render(graphic)
+    graphic.draw_image(sprite_image, *position)
   end
 
   def boundary
-    javafx.geometry.Rectangle2D.new *position, @image.width, @image.height
+    half_width = sprite_image.width / 2 # looks a bit silly at full width
+    half_height = sprite_image.height / 2
+    javafx.geometry.Rectangle2D.new(*position, half_width, half_height)
   end
 
-  def intersects?(s)
-    s.boundary.intersects boundary
+  def intersects?(other)
+    other.boundary.intersects boundary
   end
 end
 
 class BagGame < JRubyFX::Application
   WIDTH, HEIGHT = 512, 512
-
+  attr_reader :bags
   def start(stage)
     input, @bags = {}, []
     setup_bags
-    briefcase = sprite("briefcase.png", position: Vector[200, 0])
-    gc = nil
-    
-    with(stage, title: "Collect the Money Bags!") do
+    briefcase = sprite('briefcase.png', position: Vector[200, 0])
+    graphic = nil
+    with(stage, title: 'Collect the Money Bags!') do
       stage.layout_scene(WIDTH, HEIGHT) do
         group do
-          canvas(WIDTH, HEIGHT) do            
-            gc = graphicsContext2D
-            with(gc, fill: Color::GREEN, stroke: Color::BLACK)
+          canvas(WIDTH, HEIGHT) do
+            graphic = graphicsContext2D
+            with(graphic, fill: Color::GREEN, stroke: Color::BLACK)
           end
         end
       end
@@ -56,41 +59,43 @@ class BagGame < JRubyFX::Application
 
     stage.scene.on_key_pressed { |event| input[event.code.to_s.to_sym] = true }
     stage.scene.on_key_released { |event| input.delete(event.code.to_s.to_sym) }
-    
-    ActionTimer.new(self, briefcase, @bags, gc, input).start
+
+    ActionTimer.new(self, briefcase, bags, graphic, input).start
   end
 
   def setup_bags
     15.times do
-      @bags << sprite("moneybag.png", position: Vector[rand(350)+50, rand(350)+50])
+      bags << sprite(
+        'moneybag.png',
+        position: Vector[rand(50..400), rand(50..400)]
+      )
     end
   end
 end
 
 class ActionTimer < javafx.animation.AnimationTimer
-  def initialize(game, briefcase, bags, gc, input)
+  attr_reader :bags
+
+  def initialize(game, briefcase, bags, graphic, input)
     super()
-    @game, @briefcase, @bags, @gc, @input = game, briefcase, bags, gc, input
+    @game, @briefcase, @bags, @graphic, @input = game, briefcase, bags, graphic, input
     @last_time, @score = java.lang.System.nanoTime, 0
   end
-  
+
   def handle(time)
     # game logic (you can press left + up to move diagonal)
     total = @input.keys.map { |move| MOVES[move] }.reduce(:+)
     @briefcase.velocity = total || STILL
-
-    @briefcase.update (time - @last_time) / 1_000_000_000.0
+    @briefcase.update((time - @last_time) / 1_000_000_000.0)
     @last_time = time
-                
-    bags_count = @bags.size                         # collision detection
-    @bags.delete_if { |bag| @briefcase.intersects? bag }
-    @score += bags_count - @bags.size
-
-    @gc.clear_rect 0, 0, 512, 512                   # rendering!
-    @briefcase.render @gc
-    @game.setup_bags if @bags.empty?
-    @bags.each { |moneybag| moneybag.render @gc }
-    @gc.stroke_text "Cash: $#{100 * @score}", 360, 36
+    bags_count = bags.size # collision detection
+    bags.delete_if { |bag| @briefcase.intersects? bag }
+    @score += bags_count - bags.size
+    @graphic.clear_rect 0, 0, 512, 512 # rendering!
+    @briefcase.render @graphic
+    @game.setup_bags if bags.empty?
+    bags.each { |moneybag| moneybag.render @graphic }
+    @graphic.stroke_text "Cash: $#{100 * @score}", 360, 36
   end
 end
 
