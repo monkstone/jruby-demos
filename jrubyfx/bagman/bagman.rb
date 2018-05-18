@@ -6,7 +6,7 @@ require 'matrix'
 
 DELTA, STILL = 300.0, Vector[0.0, 0.0]
 MOVES = { LEFT: Vector[-DELTA, 0], RIGHT: Vector[DELTA, 0],
-         UP: Vector[0, -DELTA], DOWN: Vector[0, DELTA] }
+         UP: Vector[0, -DELTA], DOWN: Vector[0, DELTA] }.freeze
 MOVES.default = STILL
 
 class Sprite
